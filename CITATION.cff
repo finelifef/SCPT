@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the SCPT paper and acknowledge TCP/CLIP."
+title: "Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition"
+type: software
+authors:
+  - family-names: Liu
+    given-names: Xinda
+  - family-names: Zhang
+    given-names: Qinyu
+  - family-names: Min
+    given-names: Weiqing
+  - family-names: Geng
+    given-names: Guohua
+  - family-names: Jiang
+    given-names: Shuqiang
+license: MIT
+preferred-citation:
+  type: article
+  title: "Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition"
+  authors:
+    - family-names: Liu
+      given-names: Xinda
+    - family-names: Zhang
+      given-names: Qinyu
+    - family-names: Min
+      given-names: Weiqing
+    - family-names: Geng
+      given-names: Guohua
+    - family-names: Jiang
+      given-names: Shuqiang
+  year: 2026
+  journal: "arXiv preprint arXiv:2607.06185"
+  url: "https://arxiv.org/abs/2607.06185"

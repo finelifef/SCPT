@@ -1,116 +1,98 @@
-# Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition
-[![Pattern Recognition 2026](https://img.shields.io/badge/Pattern%20Recognition-2026-blue.svg)](https://www.sciencedirect.com/science/article/abs/pii/S0031320326005753)
-## 📝 Abstract
-This repository contains the official PyTorch implementation for our **Pattern Recognition** paper: *Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition*.
+# SCPT
 
-Fine-grained image recognition poses a significant challenge due to the substantial expertise and effort required for manual annotation. Vision-language models (VLMs) like CLIP provide a compelling zero-shot alternative, reducing reliance on extensive labeled data. However, their ability to capture subtle distinctions remains limited, leading to subpar recognition performance. While prompt tuning has proven effective for adapting
-VLMs, most existing methods treat class labels as isolated, discrete entities, overlooking the rich semantic relationships between them. This oversimplified assumption limits the model’s ability to capture hierarchical dependencies and inter-class correlations—both critical for distinguishing visually similar categories. The problem is especially acute in fine-grained classification, where accurate recognition depends on understanding
-complex label semantics. To address this, we propose Structured-Condensed Prompt Tuning (SCPT), which enhances semantic structure modeling in prompt learning. Specifically, we introduce Semantic Relation Encoding (SRE) to explicitly model inter-class semantic topology and encode structured label relationships. In parallel, we design a Semantic Condensation loss (ScLoss) to suppress redundant supervision and extract discriminative components from the global semantic space. Together, these components significantly improve semantic alignment and fine-grained discrimination. Extensive experiments on 14 fine-grained benchmarks show that SCPT effectively mitigates semantic ambiguity and achieves state-of-the-art performance in both few-shot and base-to-novel generalization settings.
+**Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition**
 
-## 📌 Citation
-If our work or this repository is helpful for your research, please cite our paper:
+Xinda Liu, Qinyu Zhang, Weiqing Min, Guohua Geng, Shuqiang Jiang
+
+[Paper](https://arxiv.org/abs/2607.06185) · [Dataset preparation](docs/DATASETS.md)
+
+SCPT combines Semantic Relation Encoding (SRE) and Semantic Condensation Loss
+(ScLoss) for few-shot adaptation of CLIP. This repository contains the SCPT
+implementation and one few-shot experiment script. Datasets, pretrained model
+weights, trained checkpoints, and experiment results are not included.
+
+## Installation
+
+Use Python 3.11 and a PyTorch build compatible with your GPU. For CUDA 12.8:
+
+```bash
+conda create -n scpt python=3.11 -y
+conda activate scpt
+python -m pip install "setuptools<81" wheel
+python -m pip install torch==2.9.0 torchvision==0.24.0 --index-url https://download.pytorch.org/whl/cu128
+python -m pip install -r requirements.txt
+python -m pip install --no-build-isolation --no-deps "git+https://github.com/KaiyangZhou/Dassl.pytorch.git@c61a1b570ac6333bd50fb5ae06aea59002fb20bb"
+```
+
+A separate `clip` package or custom CUDA SVD extension is not required.
+
+## Data preparation
+
+Download the datasets separately and follow [docs/DATASETS.md](docs/DATASETS.md)
+to prepare your image directories and split files. Food172 uses 172 classes.
+
+For datasets organized into class folders:
+
+```bash
+python -m datasets.prepare --root /path/to/datasets --dataset food172 --output-dir splits
+```
+
+For existing JSON splits, use `--source-split /path/to/split.json` as described in
+the dataset guide. Prepared files remain local and are ignored by Git.
+
+## Few-shot training
+
+```bash
+DATA_ROOT=/path/to/datasets CUDA_VISIBLE_DEVICES=0 bash scripts/fewshot.sh food172
+```
+
+The default configuration uses ViT-B/16, 16 shots per class, seeds 1/2/3, 50 epochs,
+and batch size 32. Configuration values are in `configs/scpt.yaml`.
+
+```bash
+DATA_ROOT=/path/to/datasets SPLIT_DIR=/path/to/splits OUTPUT_ROOT=/path/to/output \
+SHOTS=16 SEEDS="1 2 3" CUDA_VISIBLE_DEVICES=0 \
+bash scripts/fewshot.sh food172 DATALOADER.NUM_WORKERS 4
+```
+
+Set `PYTHON` to select another interpreter. Paths are configurable; the script
+can run from any working directory. Use a new output directory for each run.
+
+The official CLIP ViT-B/16 weights are downloaded at runtime into
+`CLIP_CACHE_DIR` (default: `~/.cache/clip`). For offline use, obtain the official
+weights separately and set `CLIP_CHECKPOINT=/path/to/ViT-B-16.pt`.
+
+## Evaluation
+
+Evaluate a checkpoint produced by your own training run:
+
+```bash
+python train.py --root /path/to/datasets --dataset food172 --shots 16 --seed 1 \
+  --eval-only --model-dir output/food172/16shot/seed1 \
+  --output-dir output/eval/food172/seed1
+```
+
+The best validation checkpoint is selected by default. Use `--load-epoch 50`
+to evaluate the final-epoch checkpoint instead.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Citation
+
 ```bibtex
-@article{SCPT2026PR,
+@article{liu2026scpt,
   title={Structured-Condensed Prompt Tuning in Vision-Language Models for Fine-grained Image Recognition},
-  author={Xinda Liu, Qinyu Zhang, Weiqing Min, Guohua Geng, Shuqiang Jiang},
-  journal={Pattern Recognition},
-  year={2026},
-  publisher={Elsevier}
+  author={Liu, Xinda and Zhang, Qinyu and Min, Weiqing and Geng, Guohua and Jiang, Shuqiang},
+  journal={arXiv preprint arXiv:2607.06185},
+  year={2026}
 }
 ```
 
-## 🚀 Main Contributions
-
-• We introduce Structured-Condensed Prompt Tuning (SCPT), a structure-aware method that enhances semantic modeling in vision-language models for FGIR, improving class differentiation through inter-class relationship capture.
-
-• We propose SRE, a technique to model inter-class semantic topology by encoding structured label relationships, preserving global semantic structure for better class hierarchy understanding.
-
-• We design ScLoss to reduce redundant supervision signals and emphasize discriminative features, improving task relevance and boosting few-shot adaptation and generalization.
-
-• Extensive experiments on 14 FGIR benchmarks show that SCPT outperforms existing methods, setting a new state-of-the-art in few-shot learning and base-to-novel generalization tasks.
-
-## 📂 Repository Structure
-```
-SCPT/
-├── configs/               # Configuration files for datasets and models
-├── data/                  # Dataset preparation and dataloader
-├── models/                # Core SCPT implementation and VL model wrappers
-│   ├── scpt.py            # Proposed Structured-Condensed Prompt Tuning
-│   └── backbone.py        # Vision-language model backbones (CLIP/ALBEF)
-├── utils/                 # Training utilities, metrics, and helpers
-├── train.py               # Training script
-├── test.py                # Evaluation script
-├── requirements.txt       # Dependencies
-└── README.md              # This file
-```
-
-## 🔧 Installation
-### 1. Environment Setup
-```bash
-# Clone this repository
-git clone https://github.com/YourUsername/SCPT.git
-cd SCPT
-
-# Create conda environment
-conda create -n scpt python=3.8
-conda activate scpt
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 2. Requirements
-- Python ≥ 3.8
-- PyTorch ≥ 1.10.0
-- torchvision ≥ 0.11.0
-- transformers ≥ 4.20.0
-- timm ≥ 0.6.0
-- numpy, pandas, pillow, tqdm, etc.
-
-## 📊 Datasets
-We evaluate SCPT on **5 mainstream fine-grained image recognition datasets**:
-1. CUB-200-2011 (Birds)
-2. Stanford Cars (Cars)
-3. FGVC-Aircraft (Aircraft)
-4. Oxford Flowers (Flowers)
-5. Stanford Dogs (Dogs)
-
-### Dataset Preparation
-1. Download datasets from official websites
-2. Organize datasets in the `data/` directory following the standard structure
-3. Update dataset paths in `configs/dataset_config.yaml`
-
-## 🎯 Training & Evaluation
-### Training
-```bash
-# Train SCPT on CUB-200-2011 (example)
-python train.py --config configs/cub_scpt.yaml
-
-# Train on custom dataset
-python train.py --config configs/custom_dataset.yaml
-```
-
-### Evaluation
-```bash
-# Evaluate pre-trained model
-python test.py --config configs/cub_scpt.yaml --checkpoint path/to/checkpoint.pth
-```
-
-## 📈 Experimental Results
-### Main Results (Top-1 Accuracy)
-| Dataset | SCPT (ViT-B/32) | SCPT (ViT-B/16) | State-of-the-Art |
-|---------|-----------------|-----------------|------------------|
-| CUB-200-2011 | 82.6% | 86.3% | 84.1% |
-| Stanford Cars | 93.1% | 95.2% | 93.8% |
-| FGVC-Aircraft | 91.5% | 93.7% | 92.3% |
-| Oxford Flowers | 98.2% | 98.9% | 98.5% |
-| Stanford Dogs | 89.4% | 91.6% | 90.2% |
-
-### Efficiency Comparison
-| Method | Prompt Length | Params | Inference Speed |
-|--------|---------------|--------|-----------------|
-| Vanilla Prompt Tuning | 100 | 1.2M | 120 FPS |
-| SCPT (Ours) | 20 | 0.24M | 185 FPS |
-
-## 🔍 Visualization
-We provide visualization code for structured prompt attention maps and condensed token selection results in `visualization/`.
+Built on [TCP](https://github.com/htyao89/Textual-based_Class-aware_prompt_tuning),
+[CoOp](https://github.com/KaiyangZhou/CoOp),
+[Dassl](https://github.com/KaiyangZhou/Dassl.pytorch), and
+[CLIP](https://github.com/openai/CLIP). See [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE).
