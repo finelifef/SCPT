@@ -29,7 +29,7 @@ A separate `clip` package or custom CUDA SVD extension is not required.
 ## Data preparation
 
 Download the datasets separately and follow [docs/DATASETS.md](docs/DATASETS.md)
-to prepare your image directories and split files. Food172 uses 172 classes.
+to prepare your image directories and split files.
 
 For datasets organized into class folders:
 
